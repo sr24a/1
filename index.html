@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حساب نسب المواد</title>
+    <style>
+        /* إعدادات عامة للخط والألوان */
+        body { 
+            font-family: 'Arial', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #4f4c6b, #87a8b0); 
+            color: #333; 
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .container { 
+            max-width: 600px; 
+            width: 100%; 
+            padding: 20px; 
+            background-color: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+            text-align: center; 
+        }
+        h1 { 
+            color: #007BFF; 
+            font-size: 24px; 
+            margin-bottom: 20px; 
+        }
+        .input-field { 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 10px; 
+            border-radius: 8px; 
+            background: #f9f9fc; 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+        }
+        .input-field label { 
+            font-weight: bold; 
+            color: #555; 
+            margin-bottom: 5px; 
+            font-size: 14px;
+        }
+        .input-field input { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            font-size: 16px;
+        }
+        button { 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            transition: background-color 0.3s ease; 
+            width: 100%;
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+        .result { 
+            margin-top: 20px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #28a745; 
+        }
+        canvas { 
+            margin-top: 20px; 
+            max-width: 100%; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>حساب نسب المواد</h1>
+        
+        <!-- حقول إدخال الدرجات -->
+        <div class="input-field">
+            <label for="english">اللغة الإنجليزية</label>
+            <input type="number" id="english" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="math">الرياضيات</label>
+            <input type="number" id="math" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="quran">القرآن الكريم والتفسير</label>
+            <input type="number" id="quran" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="language">الكفايات اللغوية</label>
+            <input type="number" id="language" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="criticalThinking">التفكير الناقد</label>
+            <input type="number" id="criticalThinking" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="digitalTech">التقنية الرقمية</label>
+            <input type="number" id="digitalTech" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        <div class="input-field">
+            <label for="biology">الأحياء</label>
+            <input type="number" id="biology" placeholder="أدخل الدرجة" min="0" max="100">
+        </div>
+        
+        <!-- زر حساب النتيجة -->
+        <button onclick="calculate()">احسب النسبة</button>
+        
+        <!-- عرض النتيجة -->
+        <div class="result" id="result"></div>
+
+        <!-- الرسم البياني -->
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <!-- إضافة مكتبة Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        const weights = {
+            english: 15.63,
+            math: 15.63,
+            quran: 15.63,
+            language: 12.5,
+            criticalThinking: 15.63,
+            digitalTech: 9.38,
+            biology: 15.63
+        };
+
+        function calculate() {
+            let totalScore = 0;
+            const grades = {};
+            let allFieldsFilled = true;
+
+            for (let subject in weights) {
+                const input = document.getElementById(subject);
+                const grade = parseFloat(input.value);
+                
+                // التحقق من الحقول والقيم
+                if (isNaN(grade) || grade < 0 || grade > 100) {
+                    input.style.borderColor = "red";
+                    alert(`يرجى إدخال درجة صحيحة لمادة ${input.previousElementSibling.innerText} بين 0 و 100.`);
+                    allFieldsFilled = false;
+                    break;
+                } else {
+                    input.style.borderColor = ""; // إعادة تعيين لون الحقل
+                    totalScore += grade * (weights[subject] / 100);
+                    grades[subject] = grade;
+                }
+            }
+
+            // إظهار النتيجة إذا كانت جميع الحقول مملوءة وصحيحة
+            if (allFieldsFilled) {
+                document.getElementById("result").textContent = `النسبة الكلية: ${totalScore.toFixed(2)}%`;
+                updateChart(grades);
+            }
+        }
+
+        let chart;
+        function updateChart(grades) {
+            const labels = [
+                "اللغة الإنجليزية", "الرياضيات", "القرآن الكريم والتفسير",
+                "الكفايات اللغوية", "التفكير الناقد", "التقنية الرقمية", "الأحياء"
+            ];
+            const data = Object.values(grades);
+
+            if (chart) chart.destroy();
+
+            const ctx = document.getElementById("myChart").getContext("2d");
+            chart = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "درجات المواد",
+                        data: data,
+                        backgroundColor: [
+                            "#007bff", "#ffc107", "#28a745", "#dc3545", "#6f42c1", "#17a2b8", "#fd7e14"
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
