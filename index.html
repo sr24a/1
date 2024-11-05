@@ -77,6 +77,11 @@
             font-weight: bold; 
             color: #28a745; 
         }
+        .message { 
+            margin-top: 20px; 
+            font-size: 18px; 
+            color: #dc3545; 
+        }
         canvas { 
             margin-top: 20px; 
             max-width: 100%; 
@@ -87,34 +92,16 @@
     <div class="container">
         <h1>حساب نسب المواد</h1>
         
+        <label for="level">اختر المستوى:</label>
+        <select id="level" onchange="updateWeights()">
+            <option value="1">الأول ثانوي</option>
+            <option value="2">الثاني ثانوي</option>
+            <option value="3">الثالث ثانوي</option>
+        </select>
+        
         <!-- حقول إدخال الدرجات -->
-        <div class="input-field">
-            <label for="english">اللغة الإنجليزية</label>
-            <input type="number" id="english" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="math">الرياضيات</label>
-            <input type="number" id="math" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="quran">القرآن الكريم والتفسير</label>
-            <input type="number" id="quran" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="language">الكفايات اللغوية</label>
-            <input type="number" id="language" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="criticalThinking">التفكير الناقد</label>
-            <input type="number" id="criticalThinking" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="digitalTech">التقنية الرقمية</label>
-            <input type="number" id="digitalTech" placeholder="أدخل الدرجة" min="0" max="100">
-        </div>
-        <div class="input-field">
-            <label for="biology">الأحياء</label>
-            <input type="number" id="biology" placeholder="أدخل الدرجة" min="0" max="100">
+        <div class="input-field" id="subjectFields">
+            <!-- الحقول ستضاف هنا ديناميكيًا -->
         </div>
         
         <!-- زر حساب النتيجة -->
@@ -122,6 +109,7 @@
         
         <!-- عرض النتيجة -->
         <div class="result" id="result"></div>
+        <div class="message" id="message"></div>
 
         <!-- الرسم البياني -->
         <canvas id="myChart"></canvas>
@@ -131,22 +119,66 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <script>
-        const weights = {
-            english: 15.63,
-            math: 15.63,
-            quran: 15.63,
-            language: 12.5,
-            criticalThinking: 15.63,
-            digitalTech: 9.38,
-            biology: 15.63
+        let weights = {
+            1: { // الأول ثانوي
+                english: 15.63,
+                math: 15.63,
+                quran: 15.63,
+                language: 12.5,
+                criticalThinking: 15.63,
+                digitalTech: 9.38,
+                biology: 15.63
+            },
+            2: { // الثاني ثانوي
+                english: 16.67,
+                math: 16.67,
+                chemistry: 16.67,
+                healthAndFitness: 16.67,
+                biology: 13.33,
+                tawheed: 10,
+                arts: 10
+            },
+            3: { // الثالث ثانوي
+                // لا توجد معلومات
+            }
         };
+
+        function updateWeights() {
+            const level = document.getElementById("level").value;
+            const subjectsContainer = document.getElementById("subjectFields");
+            subjectsContainer.innerHTML = ""; // تفريغ الحقول السابقة
+
+            if (level == 3) {
+                document.getElementById("message").textContent = "لا توجد معلومات للصف الثالث ثانوي.";
+                return; // لا تتابع في إضافة الحقول
+            } else {
+                document.getElementById("message").textContent = ""; // مسح الرسالة
+            }
+
+            const subjects = Object.keys(weights[level]);
+            subjects.forEach(subject => {
+                const fieldHTML = `
+                    <div class="input-field">
+                        <label for="${subject}">${subject.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()).replace("HealthAndFitness", "اللياقة والثقافة الصحية").replace("Tawheed", "التوحيد").replace("Arts", "الفنون").replace("Biology", "الأحياء").replace("Chemistry", "الكيمياء").replace("Math", "الرياضيات").replace("English", "اللغة الإنجليزية")}</label>
+                        <input type="number" id="${subject}" placeholder="أدخل الدرجة" min="0" max="100">
+                    </div>
+                `;
+                subjectsContainer.innerHTML += fieldHTML;
+            });
+        }
 
         function calculate() {
             let totalScore = 0;
             const grades = {};
             let allFieldsFilled = true;
+            const level = document.getElementById("level").value;
 
-            for (let subject in weights) {
+            if (level == 3) {
+                alert("لا يمكن حساب النسبة للصف الثالث ثانوي.");
+                return; // الخروج إذا كان الصف الثالث
+            }
+
+            for (let subject in weights[level]) {
                 const input = document.getElementById(subject);
                 const grade = parseFloat(input.value);
                 
@@ -158,7 +190,7 @@
                     break;
                 } else {
                     input.style.borderColor = ""; // إعادة تعيين لون الحقل
-                    totalScore += grade * (weights[subject] / 100);
+                    totalScore += grade * (weights[level][subject] / 100);
                     grades[subject] = grade;
                 }
             }
@@ -172,10 +204,7 @@
 
         let chart;
         function updateChart(grades) {
-            const labels = [
-                "اللغة الإنجليزية", "الرياضيات", "القرآن الكريم والتفسير",
-                "الكفايات اللغوية", "التفكير الناقد", "التقنية الرقمية", "الأحياء"
-            ];
+            const labels = Object.keys(grades).map(subject => subject.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()));
             const data = Object.values(grades);
 
             if (chart) chart.destroy();
@@ -203,6 +232,9 @@
                 }
             });
         }
+
+        // تحديث الحقول عند تحميل الصفحة لأول مرة
+        document.addEventListener("DOMContentLoaded", updateWeights);
     </script>
 </body>
 </html>
